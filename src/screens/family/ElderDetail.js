@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { getElderById, updateElder, addReminder, listReminders, updateReminder, deleteReminder, generateLinkCode, listCaregivers } from '../../services/family/elders';
 import { getCurrentUser } from '../../services/auth';
 
@@ -68,70 +68,76 @@ export default function ElderDetail({ route }) {
   if (!elder) return <View style={{ flex:1 }}/>
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>{elder.full_name}</Text>
-      <TextInput style={styles.input} placeholder="Nome completo" value={elder.full_name} onChangeText={(t)=>setElder({ ...elder, full_name: t })} />
-      <TextInput style={styles.input} placeholder="Idade" value={elder.age ? String(elder.age) : ''} onChangeText={(t)=>setElder({ ...elder, age: t?Number(t):null })} keyboardType="numeric" />
-      <TextInput style={styles.input} placeholder="Endereço" value={elder.address || ''} onChangeText={(t)=>setElder({ ...elder, address: t })} />
-      <TextInput style={styles.input} placeholder="Condições médicas" value={elder.medical_conditions || ''} onChangeText={(t)=>setElder({ ...elder, medical_conditions: t })} multiline />
-      <TextInput style={styles.input} placeholder="Alergias" value={elder.allergies || ''} onChangeText={(t)=>setElder({ ...elder, allergies: t })} multiline />
-      <TextInput style={styles.input} placeholder="Observações" value={elder.notes || ''} onChangeText={(t)=>setElder({ ...elder, notes: t })} multiline />
-      
-      <TouchableOpacity style={styles.button} onPress={onSave}><Text style={styles.buttonText}>Salvar alterações</Text></TouchableOpacity>
+    <FlatList
+      data={reminders}
+      keyExtractor={item => String(item.id)}
+      keyboardShouldPersistTaps="handled"
+      contentContainerStyle={styles.container}
+      ListHeaderComponent={() => (
+        <View>
+          <Text style={styles.title}>{elder.full_name}</Text>
+          <TextInput style={styles.input} placeholder="Nome completo" value={elder.full_name} onChangeText={(t)=>setElder({ ...elder, full_name: t })} />
+          <TextInput style={styles.input} placeholder="Idade" value={elder.age ? String(elder.age) : ''} onChangeText={(t)=>setElder({ ...elder, age: t?Number(t):null })} keyboardType="numeric" />
+          <TextInput style={styles.input} placeholder="Endereço" value={elder.address || ''} onChangeText={(t)=>setElder({ ...elder, address: t })} />
+          <TextInput style={styles.input} placeholder="Condições médicas" value={elder.medical_conditions || ''} onChangeText={(t)=>setElder({ ...elder, medical_conditions: t })} multiline />
+          <TextInput style={styles.input} placeholder="Alergias" value={elder.allergies || ''} onChangeText={(t)=>setElder({ ...elder, allergies: t })} multiline />
+          <TextInput style={styles.input} placeholder="Observações" value={elder.notes || ''} onChangeText={(t)=>setElder({ ...elder, notes: t })} multiline />
 
-      <Text style={styles.section}>Lembretes de medicação</Text>
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        <TextInput style={[styles.input, { flex: 1 }]} placeholder="Medicamento" value={newMed} onChangeText={setNewMed} />
-        <TextInput style={[styles.input, { width: 120 }]} placeholder="HH:MM" value={newTime} onChangeText={setNewTime} />
-      </View>
-      <TouchableOpacity style={[styles.button, { backgroundColor: '#56CCF2' }]} onPress={onAddReminder}><Text style={styles.buttonText}>Adicionar</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={onSave}><Text style={styles.buttonText}>Salvar alterações</Text></TouchableOpacity>
 
-      <FlatList
-        data={reminders}
-        keyExtractor={item => String(item.id)}
-        renderItem={({ item }) => (
-          <View style={styles.reminderRow}>
-            {editingId === item.id ? (
-              <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <TextInput style={[styles.input, { flex: 1 }]} value={editMed} onChangeText={setEditMed} />
-                  <TextInput style={[styles.input, { width: 100 }]} value={editTime} onChangeText={setEditTime} />
-                </View>
-                <View style={{ flexDirection: 'row', gap: 12, marginTop: 6 }}>
-                  <TouchableOpacity style={[styles.button, { paddingVertical: 8, backgroundColor: '#6FCF97' }]} onPress={onSaveEdit}><Text style={styles.buttonText}>Salvar</Text></TouchableOpacity>
-                  <TouchableOpacity style={[styles.button, { paddingVertical: 8, backgroundColor: '#BDBDBD' }]} onPress={()=>{ setEditingId(null); }}><Text style={styles.buttonText}>Cancelar</Text></TouchableOpacity>
-                </View>
-              </View>
-            ) : (
-              <>
-                <Text style={{ flex: 1 }}>{item.name}</Text>
-                <Text style={{ width: 60, textAlign: 'right' }}>{item.time}</Text>
-                <TouchableOpacity onPress={() => onStartEdit(item)}>
-                  <Text style={{ color: '#2F80ED', marginLeft: 12 }}>Editar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={async ()=>{ await deleteReminder(item.id); load(); }}>
-                  <Text style={{ color: '#EB5757', marginLeft: 12 }}>Remover</Text>
-                </TouchableOpacity>
-              </>
-            )}
+          <Text style={styles.section}>Lembretes de medicação</Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TextInput style={[styles.input, { flex: 1 }]} placeholder="Medicamento" value={newMed} onChangeText={setNewMed} />
+            <TextInput style={[styles.input, { width: 120 }]} placeholder="HH:MM" value={newTime} onChangeText={setNewTime} />
           </View>
-        )}
-      />
-
-      <Text style={styles.section}>Vincular cuidadores</Text>
-      <TouchableOpacity style={[styles.button, { backgroundColor: '#F2C94C' }]} onPress={onGenerateCode}>
-        <Text style={[styles.buttonText, { color: '#1A1A1A' }]}>Gerar código</Text>
-      </TouchableOpacity>
-      {code && <Text style={styles.code}>{code}</Text>}
-
-      <Text style={styles.section}>Cuidadores vinculados</Text>
-      {caregivers.map(c => (
-        <View key={c.id} style={styles.caregiverItem}>
-          <Text>{c.name}</Text>
-          <Text style={{ color: '#888' }}>{c.subrole === 'formal' ? 'Formal' : 'Informal'}</Text>
+          <TouchableOpacity style={[styles.button, { backgroundColor: '#56CCF2' }]} onPress={onAddReminder}><Text style={styles.buttonText}>Adicionar</Text></TouchableOpacity>
         </View>
-      ))}
-    </ScrollView>
+      )}
+      renderItem={({ item }) => (
+        <View style={styles.reminderRow}>
+          {editingId === item.id ? (
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TextInput style={[styles.input, { flex: 1 }]} value={editMed} onChangeText={setEditMed} />
+                <TextInput style={[styles.input, { width: 100 }]} value={editTime} onChangeText={setEditTime} />
+              </View>
+              <View style={{ flexDirection: 'row', gap: 12, marginTop: 6 }}>
+                <TouchableOpacity style={[styles.button, { paddingVertical: 8, backgroundColor: '#6FCF97' }]} onPress={onSaveEdit}><Text style={styles.buttonText}>Salvar</Text></TouchableOpacity>
+                <TouchableOpacity style={[styles.button, { paddingVertical: 8, backgroundColor: '#BDBDBD' }]} onPress={()=>{ setEditingId(null); }}><Text style={styles.buttonText}>Cancelar</Text></TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <>
+              <Text style={{ flex: 1 }}>{item.name}</Text>
+              <Text style={{ width: 60, textAlign: 'right' }}>{item.time}</Text>
+              <TouchableOpacity onPress={() => onStartEdit(item)}>
+                <Text style={{ color: '#2F80ED', marginLeft: 12 }}>Editar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={async ()=>{ await deleteReminder(item.id); load(); }}>
+                <Text style={{ color: '#EB5757', marginLeft: 12 }}>Remover</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      )}
+      ListFooterComponent={() => (
+        <View>
+          <Text style={styles.section}>Vincular cuidadores</Text>
+          <TouchableOpacity style={[styles.button, { backgroundColor: '#F2C94C' }]} onPress={onGenerateCode}>
+            <Text style={[styles.buttonText, { color: '#1A1A1A' }]}>Gerar código</Text>
+          </TouchableOpacity>
+          {code && <Text style={styles.code}>{code}</Text>}
+
+          <Text style={styles.section}>Cuidadores vinculados</Text>
+          {caregivers.map(c => (
+            <View key={c.id} style={styles.caregiverItem}>
+              <Text>{c.name}</Text>
+              <Text style={{ color: '#888' }}>{c.subrole === 'formal' ? 'Formal' : 'Informal'}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    />
   );
 }
 
