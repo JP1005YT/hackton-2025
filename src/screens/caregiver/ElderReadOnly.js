@@ -4,6 +4,14 @@ import { getElderById, listReminders } from '../../services/family/elders';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
+
 export default function ElderReadOnly({ route }) {
   const { elderId } = route.params;
   const [elder, setElder] = useState(null);
@@ -11,6 +19,14 @@ export default function ElderReadOnly({ route }) {
 
   useEffect(() => {
     (async () => {
+
+      if (Device.isDevice) {
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status !== "granted") {
+          alert("Permissão para notificações não concedida!");
+        }
+      }
+
       const e = await getElderById(elderId);
       setElder(e);
       const meds = await listReminders(elderId);
@@ -19,6 +35,17 @@ export default function ElderReadOnly({ route }) {
   }, [elderId]);
 
   if (!elder) return <View style={{ flex:1 }}/>
+
+  async function enviarNotificacao() {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "📢 Olá!",
+        body: "Essa é uma notificação de teste.",
+      },
+      trigger: { seconds: 2 }, // dispara em 2 segundos
+    });
+  }
+
 
   return (
     <View style={styles.container}>
@@ -29,7 +56,7 @@ export default function ElderReadOnly({ route }) {
       {!!elder.allergies && <Text style={styles.row}>Alergias: {elder.allergies}</Text>}
       {!!elder.notes && <Text style={styles.row}>Obs.: {elder.notes}</Text>}
 
-      <Text style={[styles.title, { marginTop: 16 }]}>Lembretesa</Text>
+      <Text style={[styles.title, { marginTop: 16 }]}>Lembretes</Text>
       <FlatList
         data={reminders}
         keyExtractor={item => String(item.id)}

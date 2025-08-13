@@ -24,10 +24,10 @@ export default function RegisterScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Criar conta</Text>
-      <TextInput style={styles.input} placeholder="Nome" value={name} onChangeText={setName} />
-      <TextInput style={styles.input} placeholder="CPF" value={cpf} onChangeText={setCpf} autoCapitalize="none" />
-      <TextInput style={styles.input} placeholder="Email (opcional)" value={email} onChangeText={setEmail} autoCapitalize="none" />
-      <TextInput style={styles.input} placeholder="Senha" value={password} onChangeText={setPassword} secureTextEntry />
+  <TextInput style={styles.input} placeholder="Nome" placeholderTextColor="#777" value={name} onChangeText={setName} />
+  <TextInput style={styles.input} placeholder="CPF" placeholderTextColor="#777" value={cpf} onChangeText={setCpf} autoCapitalize="none" />
+  <TextInput style={styles.input} placeholder="Email (opcional)" placeholderTextColor="#777" value={email} onChangeText={setEmail} autoCapitalize="none" />
+  <TextInput style={styles.input} placeholder="Senha" placeholderTextColor="#777" value={password} onChangeText={setPassword} secureTextEntry />
 
       <Text style={styles.label}>Tipo de conta</Text>
       <View style={styles.row}>
@@ -55,7 +55,7 @@ export default function RegisterScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 24, backgroundColor: '#fff' },
   title: { fontSize: 24, fontWeight: 'bold', color: '#2F80ED', marginBottom: 16 },
-  input: { borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 8, padding: 12, marginBottom: 12 },
+  input: { borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 8, padding: 12, marginBottom: 12, color: '#000' },
   label: { fontWeight: '600', marginTop: 8, marginBottom: 6 },
   row: { flexDirection: 'row', gap: 12 },
   chip: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1, borderColor: '#E0E0E0', marginRight: 8 },

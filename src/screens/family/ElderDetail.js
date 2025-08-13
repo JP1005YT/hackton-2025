@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { getElderById, updateElder, addReminder, listReminders, updateReminder, deleteReminder, generateLinkCode, listCaregivers } from '../../services/family/elders';
 import { getCurrentUser } from '../../services/auth';
 
@@ -68,38 +68,40 @@ export default function ElderDetail({ route }) {
   if (!elder) return <View style={{ flex:1 }}/>
 
   return (
-    <FlatList
-      data={reminders}
-      keyExtractor={item => String(item.id)}
-      keyboardShouldPersistTaps="handled"
-      contentContainerStyle={styles.container}
-      ListHeaderComponent={() => (
-        <View>
-          <Text style={styles.title}>{elder.full_name}</Text>
-          <TextInput style={styles.input} placeholder="Nome completo" value={elder.full_name} onChangeText={(t)=>setElder({ ...elder, full_name: t })} />
-          <TextInput style={styles.input} placeholder="Idade" value={elder.age ? String(elder.age) : ''} onChangeText={(t)=>setElder({ ...elder, age: t?Number(t):null })} keyboardType="numeric" />
-          <TextInput style={styles.input} placeholder="Endereço" value={elder.address || ''} onChangeText={(t)=>setElder({ ...elder, address: t })} />
-          <TextInput style={styles.input} placeholder="Condições médicas" value={elder.medical_conditions || ''} onChangeText={(t)=>setElder({ ...elder, medical_conditions: t })} multiline />
-          <TextInput style={styles.input} placeholder="Alergias" value={elder.allergies || ''} onChangeText={(t)=>setElder({ ...elder, allergies: t })} multiline />
-          <TextInput style={styles.input} placeholder="Observações" value={elder.notes || ''} onChangeText={(t)=>setElder({ ...elder, notes: t })} multiline />
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: '#fff' }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.select({ ios: 80, android: 0 })}
+    >
+    <ScrollView
+      keyboardShouldPersistTaps="always"
+      contentContainerStyle={[styles.container, { paddingBottom: 48 }]}
+      showsVerticalScrollIndicator={false}
+    >
+      <Text style={styles.title}>{elder.full_name}</Text>
+      <TextInput style={styles.input} placeholder="Nome completo" placeholderTextColor="#777" value={elder.full_name} onChangeText={(t)=>setElder({ ...elder, full_name: t })} />
+      <TextInput style={styles.input} placeholder="Idade" placeholderTextColor="#777" value={elder.age ? String(elder.age) : ''} onChangeText={(t)=>setElder({ ...elder, age: t?Number(t):null })} keyboardType="numeric" />
+      <TextInput style={styles.input} placeholder="Endereço" placeholderTextColor="#777" value={elder.address || ''} onChangeText={(t)=>setElder({ ...elder, address: t })} />
+      <TextInput style={styles.input} placeholder="Condições médicas" placeholderTextColor="#777" value={elder.medical_conditions || ''} onChangeText={(t)=>setElder({ ...elder, medical_conditions: t })} multiline />
+      <TextInput style={styles.input} placeholder="Alergias" placeholderTextColor="#777" value={elder.allergies || ''} onChangeText={(t)=>setElder({ ...elder, allergies: t })} multiline />
+      <TextInput style={styles.input} placeholder="Observações" placeholderTextColor="#777" value={elder.notes || ''} onChangeText={(t)=>setElder({ ...elder, notes: t })} multiline />
 
-          <TouchableOpacity style={styles.button} onPress={onSave}><Text style={styles.buttonText}>Salvar alterações</Text></TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={onSave}><Text style={styles.buttonText}>Salvar alterações</Text></TouchableOpacity>
 
-          <Text style={styles.section}>Lembretes de medicação</Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <TextInput style={[styles.input, { flex: 1 }]} placeholder="Medicamento" value={newMed} onChangeText={setNewMed} />
-            <TextInput style={[styles.input, { width: 120 }]} placeholder="HH:MM" value={newTime} onChangeText={setNewTime} />
-          </View>
-          <TouchableOpacity style={[styles.button, { backgroundColor: '#56CCF2' }]} onPress={onAddReminder}><Text style={styles.buttonText}>Adicionar</Text></TouchableOpacity>
-        </View>
-      )}
-      renderItem={({ item }) => (
-        <View style={styles.reminderRow}>
+      <Text style={styles.section}>Lembretes de medicação</Text>
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        <TextInput style={[styles.input, { flex: 1 }]} placeholder="Medicamento" placeholderTextColor="#777" value={newMed} onChangeText={setNewMed} />
+        <TextInput style={[styles.input, { width: 120 }]} placeholder="HH:MM" placeholderTextColor="#777" value={newTime} onChangeText={setNewTime} />
+      </View>
+      <TouchableOpacity style={[styles.button, { backgroundColor: '#56CCF2' }]} onPress={onAddReminder}><Text style={styles.buttonText}>Adicionar</Text></TouchableOpacity>
+
+      {reminders.map(item => (
+        <View key={item.id} style={styles.reminderRow}>
           {editingId === item.id ? (
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                <TextInput style={[styles.input, { flex: 1 }]} value={editMed} onChangeText={setEditMed} />
-                <TextInput style={[styles.input, { width: 100 }]} value={editTime} onChangeText={setEditTime} />
+                <TextInput style={[styles.input, { flex: 1 }]} value={editMed} onChangeText={setEditMed} placeholderTextColor="#777" />
+                <TextInput style={[styles.input, { width: 100 }]} value={editTime} onChangeText={setEditTime} placeholder="HH:MM" placeholderTextColor="#777" />
               </View>
               <View style={{ flexDirection: 'row', gap: 12, marginTop: 6 }}>
                 <TouchableOpacity style={[styles.button, { paddingVertical: 8, backgroundColor: '#6FCF97' }]} onPress={onSaveEdit}><Text style={styles.buttonText}>Salvar</Text></TouchableOpacity>
@@ -119,32 +121,30 @@ export default function ElderDetail({ route }) {
             </>
           )}
         </View>
-      )}
-      ListFooterComponent={() => (
-        <View>
-          <Text style={styles.section}>Vincular cuidadores</Text>
-          <TouchableOpacity style={[styles.button, { backgroundColor: '#F2C94C' }]} onPress={onGenerateCode}>
-            <Text style={[styles.buttonText, { color: '#1A1A1A' }]}>Gerar código</Text>
-          </TouchableOpacity>
-          {code && <Text style={styles.code}>{code}</Text>}
+      ))}
 
-          <Text style={styles.section}>Cuidadores vinculados</Text>
-          {caregivers.map(c => (
-            <View key={c.id} style={styles.caregiverItem}>
-              <Text>{c.name}</Text>
-              <Text style={{ color: '#888' }}>{c.subrole === 'formal' ? 'Formal' : 'Informal'}</Text>
-            </View>
-          ))}
+      <Text style={styles.section}>Vincular cuidadores</Text>
+      <TouchableOpacity style={[styles.button, { backgroundColor: '#F2C94C' }]} onPress={onGenerateCode}>
+        <Text style={[styles.buttonText, { color: '#1A1A1A' }]}>Gerar código</Text>
+      </TouchableOpacity>
+      {code && <Text style={styles.code}>{code}</Text>}
+
+      <Text style={styles.section}>Cuidadores vinculados</Text>
+      {caregivers.map(c => (
+        <View key={c.id} style={styles.caregiverItem}>
+          <Text>{c.name}</Text>
+            <Text style={{ color: '#888' }}>{c.subrole === 'formal' ? 'Formal' : 'Informal'}</Text>
         </View>
-      )}
-    />
+      ))}
+  </ScrollView>
+  </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { padding: 16, backgroundColor: '#fff' },
   title: { fontSize: 22, fontWeight: 'bold', color: '#2F80ED', marginBottom: 12 },
-  input: { borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 8, padding: 12, marginBottom: 12 },
+  input: { borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 8, padding: 12, marginBottom: 12, color: '#000' },
   section: { fontSize: 16, fontWeight: '700', marginTop: 16, marginBottom: 8 },
   button: { backgroundColor: '#2F80ED', padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 8 },
   buttonText: { color: '#fff', fontWeight: '600' },

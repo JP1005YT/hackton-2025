@@ -36,8 +36,8 @@ export default function LoginScreen({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.title}>Cuide-se</Text>
       <Text style={styles.subtitle}>Apoio ao cuidado de idosos</Text>
-      <TextInput style={styles.input} placeholder="CPF ou Nome de usuário" value={cpfOrUsername} onChangeText={setCpfOrUsername} autoCapitalize="none" />
-      <TextInput style={styles.input} placeholder="Senha" secureTextEntry value={password} onChangeText={setPassword} />
+  <TextInput style={styles.input} placeholder="CPF ou Nome de usuário" placeholderTextColor="#777" value={cpfOrUsername} onChangeText={setCpfOrUsername} autoCapitalize="none" />
+  <TextInput style={styles.input} placeholder="Senha" placeholderTextColor="#777" secureTextEntry value={password} onChangeText={setPassword} />
       <TouchableOpacity style={styles.button} onPress={onLogin} disabled={loading}>
         <Text style={styles.buttonText}>{loading ? 'Entrando...' : 'Entrar'}</Text>
       </TouchableOpacity>
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 24, justifyContent: 'center', backgroundColor: '#fff' },
   title: { fontSize: 32, fontWeight: 'bold', color: '#2F80ED', textAlign: 'center' },
   subtitle: { fontSize: 16, color: '#606060', textAlign: 'center', marginBottom: 24 },
-  input: { borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 8, padding: 12, marginBottom: 12 },
+  input: { borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 8, padding: 12, marginBottom: 12, color: '#000' },
   button: { backgroundColor: '#2F80ED', padding: 14, borderRadius: 10, marginTop: 8 },
   buttonText: { color: '#fff', textAlign: 'center', fontWeight: '600' },
   link: { color: '#2F80ED', textAlign: 'center', marginTop: 12 }

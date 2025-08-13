@@ -39,7 +39,7 @@ export default function CaregiverHome({ navigation }) {
       </View>
 
       <View style={styles.row}>
-        <TextInput style={[styles.input, { flex: 1 }]} placeholder="Código de vínculo" value={code} onChangeText={setCode} />
+  <TextInput style={[styles.input, { flex: 1 }]} placeholder="Código de vínculo" placeholderTextColor="#777" value={code} onChangeText={setCode} />
         <TouchableOpacity style={styles.linkBtn} onPress={onLink}><Text style={{ color: '#fff', fontWeight: '600' }}>Vincular</Text></TouchableOpacity>
       </View>
 
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: 'bold', color: '#2F80ED' },
   logout: { color: '#EB5757', fontWeight: '600' },
   row: { paddingHorizontal: 16, flexDirection: 'row', gap: 8, marginBottom: 8 },
-  input: { borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 8, padding: 12, marginBottom: 12 },
+  input: { borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 8, padding: 12, marginBottom: 12, color: '#000' },
   linkBtn: { backgroundColor: '#2F80ED', padding: 12, borderRadius: 10, marginLeft: 8, alignSelf: 'center' },
   card: { marginHorizontal: 16, marginVertical: 8, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: '#EEE', backgroundColor: '#FFF' },
   cardTitle: { fontSize: 18, fontWeight: '600' },
