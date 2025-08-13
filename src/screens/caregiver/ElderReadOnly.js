@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { getElderById, listReminders } from '../../services/family/elders';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
 
 export default function ElderReadOnly({ route }) {
   const { elderId } = route.params;
@@ -27,7 +29,7 @@ export default function ElderReadOnly({ route }) {
       {!!elder.allergies && <Text style={styles.row}>Alergias: {elder.allergies}</Text>}
       {!!elder.notes && <Text style={styles.row}>Obs.: {elder.notes}</Text>}
 
-      <Text style={[styles.title, { marginTop: 16 }]}>Lembretes</Text>
+      <Text style={[styles.title, { marginTop: 16 }]}>Lembretesa</Text>
       <FlatList
         data={reminders}
         keyExtractor={item => String(item.id)}

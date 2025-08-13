@@ -3,16 +3,13 @@ import * as Random from 'expo-random';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { execute, query } from '../db';
 
-// Ensure bcryptjs has a secure RNG in RN/Expo environments without WebCrypto
 if (typeof bcrypt.setRandomFallback === 'function') {
   try {
     bcrypt.setRandomFallback((len) => {
       const bytes = Random.getRandomBytes(len);
-      // bcryptjs expects a plain number[] with 0..255 values
       return Array.from(bytes);
     });
   } catch (e) {
-    // As a safety net, rethrow only if bcrypt is used and no RNG is available
     console.warn('Falha ao configurar RNG para bcryptjs:', e);
   }
 }

@@ -34,7 +34,7 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Cuidar+</Text>
+      <Text style={styles.title}>Cuide-se</Text>
       <Text style={styles.subtitle}>Apoio ao cuidado de idosos</Text>
       <TextInput style={styles.input} placeholder="CPF ou Nome de usuário" value={cpfOrUsername} onChangeText={setCpfOrUsername} autoCapitalize="none" />
       <TextInput style={styles.input} placeholder="Senha" secureTextEntry value={password} onChangeText={setPassword} />

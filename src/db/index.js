@@ -1,7 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import { Platform } from 'react-native';
 
-// Abrir DB com API assíncrona; no Web mantemos indisponível (sem configuração WASM).
 const isWeb = Platform.OS === 'web';
 let dbPromise = isWeb ? null : SQLite.openDatabaseAsync('eldercare.db');
 
@@ -11,7 +10,6 @@ export function initDatabase() {
       if (!dbPromise) { resolve(); return; }
       const db = await dbPromise;
       await db.withExclusiveTransactionAsync(async () => {
-        // boas práticas
         await db.execAsync(`PRAGMA foreign_keys = ON;`);
         await db.execAsync(`PRAGMA journal_mode = WAL;`);
 

@@ -4,7 +4,6 @@ export async function linkWithCode(caregiverId, code) {
   const res = await query(`SELECT * FROM link_codes WHERE code = ?`, [code]);
   if (res.rows.length === 0) throw new Error('Código inválido');
   const { elder_id } = res.rows._array[0];
-  // avoid duplicate link
   const exists = await query(
     `SELECT id FROM caregiver_links WHERE elder_id=? AND caregiver_id=? LIMIT 1`,
     [elder_id, caregiverId]
