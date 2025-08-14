@@ -7,10 +7,12 @@ import { initDatabase } from './src/db';
 
 export default function App() {
   useEffect(() => {
-    if (Platform.OS !== 'web') {
-      initDatabase();
-    }
+    // Inicializar banco para todas as plataformas
+    initDatabase().catch(error => {
+      console.error('Erro ao inicializar banco de dados:', error);
+    });
   }, []);
+  
   return (
     <>
       <StatusBar style="dark" />
