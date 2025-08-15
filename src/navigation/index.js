@@ -26,7 +26,7 @@ export default function RootNavigator() {
   return (
     <NavigationContainer theme={theme}>
       <Stack.Navigator screenOptions={{ headerStyle: { backgroundColor: '#fff' }, headerTintColor: '#2F80ED' }}>
-        <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Entrar' }} />
+        <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Login' }} />
         <Stack.Screen name="Register" component={RegisterScreen} options={{ title: 'Criar conta' }} />
         <Stack.Screen name="FamilyHome" component={FamilyHome} options={{ title: 'Meus Idosos' }} />
         <Stack.Screen name="ElderForm" component={ElderForm} options={{ title: 'Cadastro do Idoso' }} />

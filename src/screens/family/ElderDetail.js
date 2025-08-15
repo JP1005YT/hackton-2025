@@ -1,6 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { getElderById, updateElder, addReminder, listReminders, updateReminder, deleteReminder, generateLinkCode, listCaregivers } from '../../services/family/elders';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TextInput, 
+  TouchableOpacity, 
+  Alert, 
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform
+} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { 
+  getElderById, 
+  updateElder, 
+  addReminder, 
+  listReminders, 
+  updateReminder, 
+  deleteReminder, 
+  generateLinkCode, 
+  listCaregivers 
+} from '../../services/family/elders';
 import { getCurrentUser } from '../../services/auth';
 
 export default function ElderDetail({ route }) {
@@ -15,30 +35,45 @@ export default function ElderDetail({ route }) {
   const [editMed, setEditMed] = useState('');
   const [editTime, setEditTime] = useState('');
 
-  const load = async () => {
-    const e = await getElderById(elderId);
-    setElder(e);
-    const meds = await listReminders(elderId);
-    setReminders(meds);
-    const cgs = await listCaregivers(elderId);
-    setCaregivers(cgs);
+  const loadData = async () => {
+    try {
+      const elderData = await getElderById(elderId);
+      setElder(elderData);
+      const remindersData = await listReminders(elderId);
+      setReminders(remindersData);
+      const caregiversData = await listCaregivers(elderId);
+      setCaregivers(caregiversData);
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível carregar os dados');
+    }
   };
 
-  useEffect(() => { load(); }, [elderId]);
+  useEffect(() => { 
+    loadData(); 
+  }, [elderId]);
 
   const onSave = async () => {
     try {
       await updateElder(elderId, elder);
-      Alert.alert('Salvo', 'Informações atualizadas');
-    } catch (e) { Alert.alert('Erro', e.message); }
+      Alert.alert('Sucesso', 'Informações atualizadas com sucesso');
+    } catch (error) { 
+      Alert.alert('Erro', error.message); 
+    }
   };
 
   const onAddReminder = async () => {
+    if (!newMed || !newTime) {
+      Alert.alert('Atenção', 'Preencha todos os campos do lembrete');
+      return;
+    }
     try {
       await addReminder(elderId, newMed, newTime);
-      setNewMed(''); setNewTime('');
-      load();
-    } catch (e) { Alert.alert('Erro', e.message); }
+      setNewMed(''); 
+      setNewTime('');
+      await loadData();
+    } catch (error) { 
+      Alert.alert('Erro', error.message); 
+    }
   };
 
   const onStartEdit = (item) => {
@@ -51,104 +86,540 @@ export default function ElderDetail({ route }) {
     try {
       await updateReminder(editingId, editMed, editTime);
       setEditingId(null);
-      setEditMed('');
-      setEditTime('');
-      load();
-    } catch (e) { Alert.alert('Erro', e.message); }
+      await loadData();
+    } catch (error) { 
+      Alert.alert('Erro', error.message); 
+    }
   };
 
   const onGenerateCode = async () => {
     try {
       const user = await getCurrentUser();
-      const c = await generateLinkCode(elderId, user.id);
-      setCode(c);
-    } catch (e) { Alert.alert('Erro', e.message); }
+      const generatedCode = await generateLinkCode(elderId, user.id);
+      setCode(generatedCode);
+    } catch (error) { 
+      Alert.alert('Erro', error.message); 
+    }
   };
 
-  if (!elder) return <View style={{ flex:1 }}/>
+  if (!elder) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Carregando...</Text>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: '#fff' }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
       keyboardVerticalOffset={Platform.select({ ios: 80, android: 0 })}
     >
-    <ScrollView
-      keyboardShouldPersistTaps="always"
-      contentContainerStyle={[styles.container, { paddingBottom: 48 }]}
-      showsVerticalScrollIndicator={false}
-    >
-      <Text style={styles.title}>{elder.full_name}</Text>
-      <TextInput style={styles.input} placeholder="Nome completo" placeholderTextColor="#777" value={elder.full_name} onChangeText={(t)=>setElder({ ...elder, full_name: t })} />
-      <TextInput style={styles.input} placeholder="Idade" placeholderTextColor="#777" value={elder.age ? String(elder.age) : ''} onChangeText={(t)=>setElder({ ...elder, age: t?Number(t):null })} keyboardType="numeric" />
-      <TextInput style={styles.input} placeholder="Endereço" placeholderTextColor="#777" value={elder.address || ''} onChangeText={(t)=>setElder({ ...elder, address: t })} />
-      <TextInput style={styles.input} placeholder="Condições médicas" placeholderTextColor="#777" value={elder.medical_conditions || ''} onChangeText={(t)=>setElder({ ...elder, medical_conditions: t })} multiline />
-      <TextInput style={styles.input} placeholder="Alergias" placeholderTextColor="#777" value={elder.allergies || ''} onChangeText={(t)=>setElder({ ...elder, allergies: t })} multiline />
-      <TextInput style={styles.input} placeholder="Observações" placeholderTextColor="#777" value={elder.notes || ''} onChangeText={(t)=>setElder({ ...elder, notes: t })} multiline />
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>{elder.full_name}</Text>
+          {elder.age && <Text style={styles.age}>{elder.age} anos</Text>}
+        </View>
 
-      <TouchableOpacity style={styles.button} onPress={onSave}><Text style={styles.buttonText}>Salvar alterações</Text></TouchableOpacity>
+        {/* Informações básicas */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Informações Pessoais</Text>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Nome Completo</Text>
+            <TextInput
+              style={styles.input}
+              value={elder.full_name}
+              onChangeText={(text) => setElder({...elder, full_name: text})}
+            />
+          </View>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Idade</Text>
+            <TextInput
+              style={styles.input}
+              value={elder.age ? String(elder.age) : ''}
+              onChangeText={(text) => setElder({...elder, age: text ? Number(text) : null})}
+              keyboardType="numeric"
+            />
+          </View>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Endereço</Text>
+            <TextInput
+              style={styles.input}
+              value={elder.address || ''}
+              onChangeText={(text) => setElder({...elder, address: text})}
+            />
+          </View>
 
-      <Text style={styles.section}>Lembretes de medicação</Text>
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        <TextInput style={[styles.input, { flex: 1 }]} placeholder="Medicamento" placeholderTextColor="#777" value={newMed} onChangeText={setNewMed} />
-        <TextInput style={[styles.input, { width: 120 }]} placeholder="HH:MM" placeholderTextColor="#777" value={newTime} onChangeText={setNewTime} />
-      </View>
-      <TouchableOpacity style={[styles.button, { backgroundColor: '#56CCF2' }]} onPress={onAddReminder}><Text style={styles.buttonText}>Adicionar</Text></TouchableOpacity>
+<View style={styles.inputGroup}>
+  <Text style={styles.label}>Condições médicas</Text>
+  <TextInput
+    style={[styles.input, styles.multilineInput]}
+    value={elder.medical_conditions || ''}
+    onChangeText={(text) => setElder({...elder, medical_conditions: text})}
+    multiline
+    numberOfLines={4}
+    placeholder="Informe as condições médicas"
+    placeholderTextColor="#999"
+  />
+</View>
 
-      {reminders.map(item => (
-        <View key={item.id} style={styles.reminderRow}>
-          {editingId === item.id ? (
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                <TextInput style={[styles.input, { flex: 1 }]} value={editMed} onChangeText={setEditMed} placeholderTextColor="#777" />
-                <TextInput style={[styles.input, { width: 100 }]} value={editTime} onChangeText={setEditTime} placeholder="HH:MM" placeholderTextColor="#777" />
-              </View>
-              <View style={{ flexDirection: 'row', gap: 12, marginTop: 6 }}>
-                <TouchableOpacity style={[styles.button, { paddingVertical: 8, backgroundColor: '#6FCF97' }]} onPress={onSaveEdit}><Text style={styles.buttonText}>Salvar</Text></TouchableOpacity>
-                <TouchableOpacity style={[styles.button, { paddingVertical: 8, backgroundColor: '#BDBDBD' }]} onPress={()=>{ setEditingId(null); }}><Text style={styles.buttonText}>Cancelar</Text></TouchableOpacity>
-              </View>
+<View style={styles.inputGroup}>
+  <Text style={styles.label}>Alergias</Text>
+  <TextInput
+    style={[styles.input, styles.multilineInput]}
+    value={elder.allergies || ''}
+    onChangeText={(text) => setElder({...elder, allergies: text})}
+    multiline
+    numberOfLines={4}
+    placeholder="Informe as alergias conhecidas"
+    placeholderTextColor="#999"
+  />
+</View>
+
+<View style={styles.inputGroup}>
+  <Text style={styles.label}>Observações</Text>
+  <TextInput
+    style={[styles.input, styles.multilineInput]}
+    value={elder.notes || ''}
+    onChangeText={(text) => setElder({...elder, notes: text})}
+    multiline
+    numberOfLines={4}
+    placeholder="Adicione outras observações importantes"
+    placeholderTextColor="#999"
+  />
+</View>
+         
+          
+          <TouchableOpacity style={styles.saveButton} onPress={onSave}>
+            <Text style={styles.saveButtonText}>Salvar Alterações</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Saúde */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Informações de Saúde</Text>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Condições Médicas</Text>
+            <TextInput
+              style={[styles.input, styles.multilineInput]}
+              value={elder.medical_conditions || ''}
+              onChangeText={(text) => setElder({...elder, medical_conditions: text})}
+              multiline
+            />
+          </View>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Alergias</Text>
+            <TextInput
+              style={[styles.input, styles.multilineInput]}
+              value={elder.allergies || ''}
+              onChangeText={(text) => setElder({...elder, allergies: text})}
+              multiline
+            />
+          </View>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Observações</Text>
+            <TextInput
+              style={[styles.input, styles.multilineInput]}
+              value={elder.notes || ''}
+              onChangeText={(text) => setElder({...elder, notes: text})}
+              multiline
+            />
+          </View>
+        </View>
+
+        {/* Lembretes de Medicação */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Lembretes de Medicação</Text>
+          
+          <View style={styles.reminderForm}>
+            <View style={styles.reminderInputGroup}>
+              <Text style={styles.label}>Medicamento</Text>
+              <TextInput
+                style={styles.input}
+                value={newMed}
+                onChangeText={setNewMed}
+                placeholder="Nome do medicamento"
+              />
             </View>
+            
+            <View style={styles.reminderInputGroup}>
+              <Text style={styles.label}>Horário</Text>
+              <TextInput
+                style={styles.input}
+                value={newTime}
+                onChangeText={setNewTime}
+                placeholder="HH:MM"
+              />
+            </View>
+            
+            <TouchableOpacity style={styles.addButton} onPress={onAddReminder}>
+              <Icon name="add" size={24} color="#FFF" />
+              <Text style={styles.addButtonText}>Adicionar Lembrete</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {reminders.length > 0 ? (
+            reminders.map(item => (
+              <View key={item.id} style={styles.reminderItem}>
+                {editingId === item.id ? (
+                  <View style={styles.editReminderContainer}>
+                    <View style={styles.editInputGroup}>
+                      <TextInput
+                        style={styles.input}
+                        value={editMed}
+                        onChangeText={setEditMed}
+                      />
+                      <TextInput
+                        style={styles.input}
+                        value={editTime}
+                        onChangeText={setEditTime}
+                        placeholder="HH:MM"
+                      />
+                    </View>
+                    
+                    <View style={styles.editButtons}>
+                      <TouchableOpacity 
+                        style={[styles.editButton, styles.saveEditButton]} 
+                        onPress={onSaveEdit}
+                      >
+                        <Text style={styles.editButtonText}>Salvar</Text>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity 
+                        style={[styles.editButton, styles.cancelEditButton]} 
+                        onPress={() => setEditingId(null)}
+                      >
+                        <Text style={styles.editButtonText}>Cancelar</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.reminderInfo}>
+                    <View style={styles.reminderText}>
+                      <Text style={styles.reminderName}>{item.name}</Text>
+                      <Text style={styles.reminderTime}>{item.time}</Text>
+                    </View>
+                    
+                    <View style={styles.reminderActions}>
+                      <TouchableOpacity 
+                        style={styles.reminderActionButton} 
+                        onPress={() => onStartEdit(item)}
+                      >
+                        <Icon name="edit" size={20} color="#2F80ED" />
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity 
+                        style={styles.reminderActionButton} 
+                        onPress={async () => { await deleteReminder(item.id); loadData(); }}
+                      >
+                        <Icon name="delete" size={20} color="#EB5757" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              </View>
+            ))
           ) : (
-            <>
-              <Text style={{ flex: 1 }}>{item.name}</Text>
-              <Text style={{ width: 60, textAlign: 'right' }}>{item.time}</Text>
-              <TouchableOpacity onPress={() => onStartEdit(item)}>
-                <Text style={{ color: '#2F80ED', marginLeft: 12 }}>Editar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={async ()=>{ await deleteReminder(item.id); load(); }}>
-                <Text style={{ color: '#EB5757', marginLeft: 12 }}>Remover</Text>
-              </TouchableOpacity>
-            </>
+            <View style={styles.emptyReminders}>
+              <Icon name="notifications-none" size={40} color="#A8DADC" />
+              <Text style={styles.emptyRemindersText}>Nenhum lembrete cadastrado</Text>
+            </View>
           )}
         </View>
-      ))}
 
-      <Text style={styles.section}>Vincular cuidadores</Text>
-      <TouchableOpacity style={[styles.button, { backgroundColor: '#F2C94C' }]} onPress={onGenerateCode}>
-        <Text style={[styles.buttonText, { color: '#1A1A1A' }]}>Gerar código</Text>
-      </TouchableOpacity>
-      {code && <Text style={styles.code}>{code}</Text>}
-
-      <Text style={styles.section}>Cuidadores vinculados</Text>
-      {caregivers.map(c => (
-        <View key={c.id} style={styles.caregiverItem}>
-          <Text>{c.name}</Text>
-            <Text style={{ color: '#888' }}>{c.subrole === 'formal' ? 'Formal' : 'Informal'}</Text>
+        {/* Cuidadores */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Cuidadores</Text>
+          
+          <TouchableOpacity style={styles.generateCodeButton} onPress={onGenerateCode}>
+            <Icon name="vpn-key" size={20} color="#1A1A1A" />
+            <Text style={styles.generateCodeButtonText}>Gerar Código de Acesso</Text>
+          </TouchableOpacity>
+          
+          {code && (
+            <View style={styles.codeContainer}>
+              <Text style={styles.codeText}>Código: {code}</Text>
+              <Text style={styles.codeInstructions}>Compartilhe este código com o cuidador</Text>
+            </View>
+          )}
+          
+          {caregivers.length > 0 ? (
+            caregivers.map(caregiver => (
+              <View key={caregiver.id} style={styles.caregiverItem}>
+                <View style={styles.caregiverInfo}>
+                  <Text style={styles.caregiverName}>{caregiver.name}</Text>
+                  <Text style={styles.caregiverType}>
+                    {caregiver.subrole === 'formal' ? 'Cuidador Formal' : 'Cuidador Informal'}
+                  </Text>
+                </View>
+                <Icon name="person" size={24} color="#2F80ED" />
+              </View>
+            ))
+          ) : (
+            <View style={styles.emptyCaregivers}>
+              <Icon name="person-outline" size={40} color="#A8DADC" />
+              <Text style={styles.emptyCaregiversText}>Nenhum cuidador vinculado</Text>
+            </View>
+          )}
         </View>
-      ))}
-  </ScrollView>
-  </KeyboardAvoidingView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: '#fff' },
-  title: { fontSize: 22, fontWeight: 'bold', color: '#2F80ED', marginBottom: 12 },
-  input: { borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 8, padding: 12, marginBottom: 12, color: '#000' },
-  section: { fontSize: 16, fontWeight: '700', marginTop: 16, marginBottom: 8 },
-  button: { backgroundColor: '#2F80ED', padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 8 },
-  buttonText: { color: '#fff', fontWeight: '600' },
-  reminderRow: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#F2F2F2', paddingVertical: 10 },
-  code: { backgroundColor: '#FFF9C4', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#F2C94C', textAlign: 'center', marginTop: 8 },
-  caregiverItem: { paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F2F2F2' }
+  container: {
+    flex: 1,
+    backgroundColor: '#A8DADC',
+  },
+  scrollContainer: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#A8DADC',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#204C54',
+  },
+  age: {
+    fontSize: 18,
+    color: '#174685',
+    backgroundColor: '#F1FAEE',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  section: {
+    backgroundColor: '#F1FAEE',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#204C54',
+    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#A8DADC',
+    paddingBottom: 8,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    color: '#174685',
+    marginBottom: 6,
+    fontWeight: '500',
+  },
+  input: {
+    backgroundColor: '#FFF',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#204C54',
+    borderWidth: 1,
+    borderColor: '#A8DADC',
+  },
+  multilineInput: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  saveButton: {
+    backgroundColor: '#204C54',
+    borderRadius: 8,
+    padding: 14,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  saveButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  reminderForm: {
+    marginBottom: 20,
+  },
+  reminderInputGroup: {
+    marginBottom: 12,
+  },
+  addButton: {
+    backgroundColor: '#204C54',
+    borderRadius: 8,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  addButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  reminderItem: {
+    backgroundColor: '#FFF',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  reminderInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  reminderText: {
+    flex: 1,
+  },
+  reminderName: {
+    fontSize: 16,
+    color: '#204C54',
+    fontWeight: '500',
+  },
+  reminderTime: {
+    fontSize: 14,
+    color: '#174685',
+    marginTop: 4,
+  },
+  reminderActions: {
+    flexDirection: 'row',
+  },
+  reminderActionButton: {
+    marginLeft: 16,
+  },
+  editReminderContainer: {
+    marginTop: 8,
+  },
+  editInputGroup: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  editButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  editButton: {
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginLeft: 8,
+  },
+  saveEditButton: {
+    backgroundColor: '#6FCF97',
+  },
+  cancelEditButton: {
+    backgroundColor: '#BDBDBD',
+  },
+  editButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+  },
+  emptyReminders: {
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyRemindersText: {
+    marginTop: 12,
+    color: '#174685',
+    textAlign: 'center',
+  },
+  generateCodeButton: {
+    backgroundColor: '#F2C94C',
+    borderRadius: 8,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  generateCodeButtonText: {
+    color: '#1A1A1A',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  codeContainer: {
+    backgroundColor: '#FFF9C4',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#F2C94C',
+  },
+  codeText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1A1A1A',
+    textAlign: 'center',
+  },
+  codeInstructions: {
+    fontSize: 14,
+    color: '#606060',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  caregiverItem: {
+    backgroundColor: '#FFF',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  caregiverInfo: {
+    flex: 1,
+  },
+  caregiverName: {
+    fontSize: 16,
+    color: '#204C54',
+    fontWeight: '500',
+  },
+  caregiverType: {
+    fontSize: 14,
+    color: '#606060',
+    marginTop: 4,
+  },
+  emptyCaregivers: {
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyCaregiversText: {
+    marginTop: 12,
+    color: '#174685',
+    textAlign: 'center',
+  },
 });
